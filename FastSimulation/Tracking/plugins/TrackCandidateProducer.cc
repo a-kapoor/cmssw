@@ -152,7 +152,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
       LogDebug("FastTracking")<<"reversing the order of the hits";
       std::reverse(recHitCandidates.begin(),recHitCandidates.end());
     }
-    
+    /*
     // initial track candidate parameters parameters
     int vertexIndex = simTracks->at(simTrackId).vertIndex();
     GlobalPoint  position(simVertices->at(vertexIndex).position().x(),
@@ -165,11 +165,18 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     GlobalTrajectoryParameters initialParams(position,momentum,(int)charge,magneticField.product());
     AlgebraicSymMatrix55 errorMatrix= AlgebraicMatrixID();    
     CurvilinearTrajectoryError initialError(errorMatrix);
-    FreeTrajectoryState initialFTS(initialParams, initialError);      
-
+    */
+    //FreeTrajectoryState initialFTS(initialParams, initialError);
+    PTrajectoryStateOnDet pState( seed.startingState());
+    //const GeomDet* gdet = theMeasurementTracker->geomTracker()->idToDet(pState.detId());
+    const GeomDet* gdet = trackerGeometry->idToDet(trackRecHits.front().geographicalId());       
+    TrajectoryStateOnSurface initialTSOS = trajectoryStateTransform::transientState(pState, &(gdet->surface()),
+										    magneticField.product());
     // create track candidate
+    /*
     const GeomDet* initialLayer = trackerGeometry->idToDet(trackRecHits.front().geographicalId());
     const TrajectoryStateOnSurface initialTSOS = propagator->propagate(initialFTS,initialLayer->surface()) ;
+    */
     if (!initialTSOS.isValid()) continue; 
     PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,trackRecHits.front().geographicalId().rawId()); 
     TrackCandidate newTrackCandidate(trackRecHits,seed,PTSOD,edm::RefToBase<TrajectorySeed>(seeds,seednr));
