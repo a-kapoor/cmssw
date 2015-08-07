@@ -17,6 +17,8 @@
 class TrackerGeometry;
 class TrajectoryStateOnSurface;
 class PropagatorWithMaterial;
+//class PropagatorWithMaterialOpposite;
+
 
 namespace edm { 
   class ParameterSet;
@@ -51,7 +53,7 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   const TrackerGeometry*  theGeometry;
   const MagneticField*  theMagField;
   PropagatorWithMaterial* thePropagator;
-
+  //PropagatorWithMaterialOpposite* oppPropagator;
 
   edm::InputTag seedProducer;
   edm::InputTag hitProducer;
@@ -72,6 +74,7 @@ class TrackCandidateProducer : public edm::stream::EDProducer <>
   edm::EDGetTokenT<SiTrackerGSMatchedRecHit2DCollection> recHitToken;
   edm::EDGetTokenT<edm::SimVertexContainer> simVertexToken;
   edm::EDGetTokenT<edm::SimTrackContainer> simTrackToken;
+  std::string propagatorLabel;
 };
 
 #endif
