@@ -27,12 +27,11 @@ generalTracksBeforeMixing = RecoTracker.FinalTrackSelectors.earlyGeneralTracks_c
 
 iterTracking = cms.Sequence(
     InitialStep
-    +DetachedTripletStep
-    +LowPtTripletStep
-    +PixelPairStep
++DetachedTripletStep
++LowPtTripletStep
++PixelPairStep
     +MixedTripletStep
     +PixelLessStep
     +TobTecStep
     +JetCoreRegionalStep
     +generalTracksBeforeMixing)
-

@@ -150,9 +150,6 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     e.put(output);
     return;
   }
-  edm::ESHandle<Propagator> opppropagator;
-  es.get<TrackingComponentsRecord>().get("AnyDirectionAnalyticalPropagator",opppropagator);
-  Propagator* oppPropagator = opppropagator.product()->clone();
   
   // Get the GS RecHits
   edm::Handle<SiTrackerGSMatchedRecHit2DCollection> theGSRecHits;
@@ -413,8 +410,8 @@ edm::ESHandle<Propagator> propagator;
     TrajectoryStateOnSurface seedTSOS = trajectoryStateTransform::transientState(aSeed->startingState(), &(gdet->surface()),theMagField);
       const GeomDet* initialLayer = theGeometry->idToDet(recHits.front().geographicalId());
       // Propagator* oppPropagator = opppropagator.product()->clone();
-      oppPropagator->setPropagationDirection(oppositeToMomentum);
-      const TrajectoryStateOnSurface initialTSOS = oppPropagator->propagate(seedTSOS,initialLayer->surface()) ;
+      thePropagator->setPropagationDirection(oppositeToMomentum);
+      const TrajectoryStateOnSurface initialTSOS = thePropagator->propagate(seedTSOS,initialLayer->surface()) ;
       if (!initialTSOS.isValid()) continue; 
       PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,recHits.front().geographicalId().rawId()); 
       TrackCandidate newTrackCandidate(recHits,*aSeed,PTSOD,edm::RefToBase<TrajectorySeed>(theSeeds,seednr));
@@ -422,6 +419,7 @@ edm::ESHandle<Propagator> propagator;
     output->push_back(newTrackCandidate);
       std::cout<<"TCP:2"<<std::endl;
     }//loop over possible simtrack associated.
+
   }//loop over all possible seeds.
   
   // Save the track candidates in the event

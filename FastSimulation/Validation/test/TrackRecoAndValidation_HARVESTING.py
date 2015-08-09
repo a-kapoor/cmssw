@@ -20,12 +20,12 @@ process.load('Configuration.StandardSequences.Harvesting_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1)
+    input = cms.untracked.int32(1000)
 )
 
 # Input source
 process.source = cms.Source("DQMRootSource",
-    fileNames = cms.untracked.vstring('file:TrackRecoAndValidation_inDQM.root')
+    fileNames = cms.untracked.vstring('file:MTV_inDQM.root')
 )
 
 process.options = cms.untracked.PSet(
