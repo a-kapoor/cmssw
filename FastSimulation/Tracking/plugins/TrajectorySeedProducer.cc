@@ -170,11 +170,12 @@ TrajectorySeedProducer::pass2HitsCuts(const TrajectorySeedHitCandidate& hit1, co
 {
   if(theRegionProducer){
   return testWithRegions(hit1,hit2);
-  std::cout<<"Line169"<<std::endl;	                 
   }
   else 
     {
-      return true;
+      std::cout<<"Either region producer, or the seed creator cfg is not available."<<std::endl;
+      return false;
+      //The above false is just a temporary solution.
     }
 }
 
@@ -307,7 +308,7 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     //    std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection};
 std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
     //TrajectorySeedCollection SeedColl;
-    std::cout<<"Line305"<<std::endl;
+    //std::cout<<"Line305"<<std::endl;
     //    std::cout<<"output_size"<<output.size()<<std::endl;
     //output.reset(new TrajectorySeedCollection);
     //std::cout<<output.size()<<std::endl;
@@ -320,14 +321,14 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
         return;
     }
 
-    std::cout<<"Line313"<<std::endl;
+    //std::cout<<"Line313"<<std::endl;
     //output= new TrajectorySeedCollection();
     
     for (SiTrackerGSMatchedRecHit2DCollection::id_iterator itSimTrackId=theGSRecHits->id_begin();  itSimTrackId!=theGSRecHits->id_end(); ++itSimTrackId )
     {
       //output.reset(new TrajectorySeedCollection);
       //std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
-      std::cout<<"Line318"<<std::endl;
+      //std::cout<<"Line318"<<std::endl;
         const unsigned int currentSimTrackId = *itSimTrackId;
 
         if(skipSimTrackIds.find(currentSimTrackId)!=skipSimTrackIds.end())
@@ -354,7 +355,7 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
         TrajectorySeedHitCandidate previousTrackerHit;
         TrajectorySeedHitCandidate currentTrackerHit;
         unsigned int layersCrossed=0;
-	std::cout<<"Line341"<<std::endl;
+	//std::cout<<"Line341"<<std::endl;
         std::vector<TrajectorySeedHitCandidate> trackerRecHits;
         for (SiTrackerGSMatchedRecHit2DCollection::const_iterator itRecHit = recHitRange.first; itRecHit!=recHitRange.second; ++itRecHit)
         {
@@ -373,7 +374,7 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
                 trackerRecHits.push_back(std::move(currentTrackerHit));
             }
         }
-	std::cout<<"Line360"<<std::endl;
+	//std::cout<<"Line360"<<std::endl;
 
         if ( layersCrossed < minLayersCrossed)
         {
@@ -399,35 +400,35 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
 	
 
        
-	std::cout<<"Outsideregionproducer"<<std::endl;
+	//std::cout<<"Outsideregionproducer"<<std::endl;
 	if(theRegionProducer){
-std::cout<<"Insideregionproducer"<<std::endl;
+	  //std::cout<<"Insideregionproducer"<<std::endl;
 	  es_ = &es;
 	  regions = theRegionProducer->regions(e,es);
 	  edm::Handle<MeasurementTrackerEvent> measurementTrackerEventHandle;
 	  e.getByToken(measurementTrackerEventToken,measurementTrackerEventHandle);
 	  measurementTrackerEvent = measurementTrackerEventHandle.product();
 	}
-std::cout<<"Outsideregionproducer"<<std::endl;
+	//std::cout<<"Outsideregionproducer"<<std::endl;
 	
-	std::cout<<"Line398"<<std::endl;
+	//std::cout<<"Line398"<<std::endl;
         std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
-	std::cout<<"Line400"<<std::endl;	
+	//std::cout<<"Line400"<<std::endl;	
 //std::map<const TrackingRecHit *, ConstRecHitPointer> hitMap;
         if (seedHitNumbers.size()>0)//&&theRegionProducer)
         {
-	    std::cout<<"Line404"<<std::endl;
+	  //  std::cout<<"Line404"<<std::endl;
 	    //////////////////////////////////////////////Addition For Make Seed//////////////////////////////////////////
 	    if(seedHitNumbers.size()==2){
-	      std::cout<<"Line407_2seeds"<<std::endl;
+	      //  std::cout<<"Line407_2seeds"<<std::endl;
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit()));
-	    std::cout<<"Line409_2Seeds"<<std::endl;
+	      //std::cout<<"Line409_2Seeds"<<std::endl;
 	    }
 	    
 	    if(seedHitNumbers.size()==3){
-	      std::cout<<"Line413_3seeds"<<std::endl;
+	      //std::cout<<"Line413_3seeds"<<std::endl;
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit()));
-	    std::cout<<"Line413_3seeds"<<std::endl;}
+	      //std::cout<<"Line413_3seeds"<<std::endl;}
 
 	    if(seedHitNumbers.size()==4){
 	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit(),trackerRecHits[seedHitNumbers[3]].hit()));}	    
@@ -435,10 +436,10 @@ std::cout<<"Outsideregionproducer"<<std::endl;
 	
     } //end loop over simtracks
     
-    std::cout<<"Line487_tryingPuttingOutput"<<std::endl;
+	//std::cout<<"Line487_tryingPuttingOutput"<<std::endl;
     //if(theRegionProducer)
     e.put(output);
-    std::cout<<"Line489_outputSuccess"<<std::endl;
+    //std::cout<<"Line489_outputSuccess"<<std::endl;
 }
 
 bool
