@@ -404,7 +404,7 @@ edm::ESHandle<Propagator> propagator;
       LogDebug("FastTracking")<<"not enough layer crossed ("<<theNumberOfCrossedLayers<<")";
       continue;
     }
-    std::cout<<"TCP:1"<<std::endl;
+    //std::cout<<"TCP:1"<<std::endl;
     DetId seedDetId(aSeed->startingState().detId());
     const GeomDet* gdet = theGeometry->idToDet(seedDetId);
     TrajectoryStateOnSurface seedTSOS = trajectoryStateTransform::transientState(aSeed->startingState(), &(gdet->surface()),theMagField);
@@ -415,9 +415,9 @@ edm::ESHandle<Propagator> propagator;
       if (!initialTSOS.isValid()) continue; 
       PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,recHits.front().geographicalId().rawId()); 
       TrackCandidate newTrackCandidate(recHits,*aSeed,PTSOD,edm::RefToBase<TrajectorySeed>(theSeeds,seednr));
-    std::cout<<"TCP:2"<<std::endl;
+      //std::cout<<"TCP:2"<<std::endl;
     output->push_back(newTrackCandidate);
-      std::cout<<"TCP:2"<<std::endl;
+    //std::cout<<"TCP:2"<<std::endl;
     }//loop over possible simtrack associated.
 
   }//loop over all possible seeds.

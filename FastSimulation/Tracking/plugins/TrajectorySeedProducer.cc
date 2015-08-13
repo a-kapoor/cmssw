@@ -305,31 +305,17 @@ TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     edm::Handle<SiTrackerGSMatchedRecHit2DCollection> theGSRecHits;
     e.getByToken(recHitToken, theGSRecHits);
 
-    //    std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection};
-std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
-    //TrajectorySeedCollection SeedColl;
-    //std::cout<<"Line305"<<std::endl;
-    //    std::cout<<"output_size"<<output.size()<<std::endl;
-    //output.reset(new TrajectorySeedCollection);
-    //std::cout<<output.size()<<std::endl;
-    
-
-    //if no hits -> directly write empty collection
+    std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
+ 
     if(theGSRecHits->size() == 0)
     {
         e.put(output);
         return;
     }
 
-    //std::cout<<"Line313"<<std::endl;
-    //output= new TrajectorySeedCollection();
-    
     for (SiTrackerGSMatchedRecHit2DCollection::id_iterator itSimTrackId=theGSRecHits->id_begin();  itSimTrackId!=theGSRecHits->id_end(); ++itSimTrackId )
     {
-      //output.reset(new TrajectorySeedCollection);
-      //std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
-      //std::cout<<"Line318"<<std::endl;
-        const unsigned int currentSimTrackId = *itSimTrackId;
+      const unsigned int currentSimTrackId = *itSimTrackId;
 
         if(skipSimTrackIds.find(currentSimTrackId)!=skipSimTrackIds.end())
         {
@@ -374,7 +360,6 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
                 trackerRecHits.push_back(std::move(currentTrackerHit));
             }
         }
-	//std::cout<<"Line360"<<std::endl;
 
         if ( layersCrossed < minLayersCrossed)
         {
@@ -397,65 +382,34 @@ std::auto_ptr<TrajectorySeedCollection> output{new TrajectorySeedCollection()};
 
 
 	regions.clear();
-	
-
-       
-	//std::cout<<"Outsideregionproducer"<<std::endl;
 	if(theRegionProducer){
-	  //std::cout<<"Insideregionproducer"<<std::endl;
 	  es_ = &es;
 	  regions = theRegionProducer->regions(e,es);
 	  edm::Handle<MeasurementTrackerEvent> measurementTrackerEventHandle;
 	  e.getByToken(measurementTrackerEventToken,measurementTrackerEventHandle);
 	  measurementTrackerEvent = measurementTrackerEventHandle.product();
 	}
-	//std::cout<<"Outsideregionproducer"<<std::endl;
-	
-	//std::cout<<"Line398"<<std::endl;
-        std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
-	//std::cout<<"Line400"<<std::endl;	
-//std::map<const TrackingRecHit *, ConstRecHitPointer> hitMap;
-        if (seedHitNumbers.size()>0)//&&theRegionProducer)
-        {
-	  //  std::cout<<"Line404"<<std::endl;
-	    //////////////////////////////////////////////Addition For Make Seed//////////////////////////////////////////
-	    if(seedHitNumbers.size()==2){
-	      //  std::cout<<"Line407_2seeds"<<std::endl;
-	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit()));
-	      //std::cout<<"Line409_2Seeds"<<std::endl;
-	    }
-	    
-	    if(seedHitNumbers.size()==3){
-	      //std::cout<<"Line413_3seeds"<<std::endl;
-	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit()));
-	      //std::cout<<"Line413_3seeds"<<std::endl;}
 
-	    if(seedHitNumbers.size()==4){
-	      seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),trackerRecHits[seedHitNumbers[2]].hit(),trackerRecHits[seedHitNumbers[3]].hit()));}	    
-	}
-	
-    } //end loop over simtracks
-    
-	//std::cout<<"Line487_tryingPuttingOutput"<<std::endl;
-    //if(theRegionProducer)
+        std::vector<unsigned int> seedHitNumbers = iterateHits(0,trackerRecHits,hitIndicesInTree,true);
+        if (seedHitNumbers.size()>0){seedCreator->makeSeed(*output,SeedingHitSet(trackerRecHits[seedHitNumbers[0]].hit(),trackerRecHits[seedHitNumbers[1]].hit(),seedHitNumbers.size()>=3?trackerRecHits[seedHitNumbers[2]].hit():nullptr,seedHitNumbers.size()>=4?trackerRecHits[seedHitNumbers[3]].hit():nullptr));}
+    }//end loop over simtracks
     e.put(output);
-    //std::cout<<"Line489_outputSuccess"<<std::endl;
 }
 
 bool
 TrajectorySeedProducer::testWithRegions(const TrajectorySeedHitCandidate & innerHit,const TrajectorySeedHitCandidate & outerHit) const{
-  std::cout<<"Inside:testWithRegions1"<<std::endl;
+  //std::cout<<"Inside:testWithRegions1"<<std::endl;
   const DetLayer * innerLayer = measurementTrackerEvent->measurementTracker().geometricSearchTracker()->detLayer(innerHit.hit()->det()->geographicalId());
   const DetLayer * outerLayer = measurementTrackerEvent->measurementTracker().geometricSearchTracker()->detLayer(outerHit.hit()->det()->geographicalId());
   typedef PixelRecoRange<float> Range;
-std::cout<<"Inside:testWithRegions1"<<std::endl;
+  //std::cout<<"Inside:testWithRegions1"<<std::endl;
   for(Regions::const_iterator ir=regions.begin(); ir < regions.end(); ++ir){
-std::cout<<"Inside:testWithRegions1"<<std::endl;
+    //std::cout<<"Inside:testWithRegions1"<<std::endl;
     auto const & gs = outerHit.hit()->globalState();
     auto loc = gs.position-(*ir)->origin().basicVector();
     const HitRZCompatibility * checkRZ = (*ir)->checkRZ(innerLayer, outerHit.hit(), *es_, outerLayer,
 							loc.perp(),gs.position.z(),gs.errorR,gs.errorZ);
-std::cout<<"Inside:testWithRegions1"<<std::endl;
+    //std::cout<<"Inside:testWithRegions1"<<std::endl;
     float u = innerLayer->isBarrel() ? loc.perp() : gs.position.z();
     float v = innerLayer->isBarrel() ? gs.position.z() : loc.perp();
     float dv = innerLayer->isBarrel() ? gs.errorZ : gs.errorR;
@@ -464,18 +418,18 @@ std::cout<<"Inside:testWithRegions1"<<std::endl;
     float vErr = nSigmaRZ * dv;
     Range hitRZ(v-vErr, v+vErr);
     Range crossRange = allowed.intersection(hitRZ);
-std::cout<<"Inside:testWithRegions1"<<std::endl;
+    //std::cout<<"Inside:testWithRegions1"<<std::endl;
     if( ! crossRange.empty()){
-std::cout<<"Inside:testWithRegions1"<<std::endl;
+      //std::cout<<"Inside:testWithRegions1"<<std::endl;
 	std::cout << "init seed creator"<< std::endl;
 	std::cout << "ptmin: " << (**ir).ptMin() << std::endl;
 	std::cout << "" << std::endl;
 	seedCreator->init(**ir,*es_,0);
 	std::cout << "done" << std::endl;
 	return true;}
-    std::cout<<"Line485"<<std::endl;
+    //std::cout<<"Line485"<<std::endl;
     //seedCreator->init(**ir,*es_,0);
-    std::cout<<"Line487"<<std::endl;  
-}
+    //std::cout<<"Line487"<<std::endl;  
+  }
   return false;
 }
