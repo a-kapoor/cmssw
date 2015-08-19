@@ -12,9 +12,12 @@ process.load("DQM.Integration.config.inputsource_cfi")
 process.load("DQM.Integration.config.environment_cfi")
 process.DQMStore.referenceFileName = "/dqmdata/dqm/reference/hlt_reference.root"
 
+<<<<<<< HEAD:DQM/Integration/python/clients/hlt_dqm_sourceclient-live_cfg.py
 process.dqmEnv.subSystemFolder = 'HLT'
 process.dqmSaver.tag = 'HLT'
 
+=======
+>>>>>>> adding HLT object monitoring to HLT online DQM:DQM/Integration/python/test/hlt_dqm_sourceclient-live_cfg.py
 process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.GlobalTrackingGeometryESProducer = cms.ESProducer( "GlobalTrackingGeometryESProducer" ) # for muon hlt dqm
