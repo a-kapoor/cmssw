@@ -127,9 +127,29 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // Count number of crossed layers, apply overlap rejection
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
-    unsigned numberOfCrossedLayers = 0;      
+    unsigned numberOfCrossedLayers = 0;
+    //--------------------------------------------------------ak
+    TrajectorySeed::range hitRange = seed.recHits();
+    for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
+      recHitCandidates.push_back(TrajectorySeedHitCandidate((const SiTrackerGSMatchedRecHit2D*) (&*ihit),
+							    trackerGeometry.product(),
+							    trackerTopology.product()));}
+    //--------------------------------------------------------ak
+    int hitCheck=0;
+    TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
+    const TrackingRecHit* recHitLast=&(*LastHit);
     for (const auto & _hit : recHitCombination) {
-
+      //---ak
+      //std::cout<<"BeforeCheck1"<<std::endl;
+      if(((const SiTrackerGSMatchedRecHit2D*)(recHitLast)
+	  ->sharesInput(&_hit,TrackingRecHit::all)))
+	{hitCheck=1;
+	  //std::cout<<"BeforeCheck2"<<std::endl;
+	  continue;}       
+      //std::cout<<"BeforeCheck3"<<std::endl;
+      
+      if(hitCheck==0)continue;
+      //---ak
       if(hitMasks_exists
 	 && size_t(_hit.id()) < hitMasks->size() 
 	 && hitMasks->at(_hit.id()))
