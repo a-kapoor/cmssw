@@ -57,10 +57,6 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
     hitMasksToken = consumes<std::vector<bool> >(hitMasksTag);
   }
 
-  edm::InputTag simTrackLabel = conf.getParameter<edm::InputTag>("simTracks");
-  simVertexToken = consumes<edm::SimVertexContainer>(simTrackLabel);
-  simTrackToken = consumes<edm::SimTrackContainer>(simTrackLabel);
-
   edm::InputTag seedLabel = conf.getParameter<edm::InputTag>("src");
   seedToken = consumes<edm::View<TrajectorySeed> >(seedLabel);
 
@@ -93,13 +89,8 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   edm::Handle<FastTMRecHitCombinations> recHitCombinations;
   e.getByToken(recHitToken, recHitCombinations);
-
-  edm::Handle<edm::SimVertexContainer> simVertices;
-  e.getByToken(simVertexToken,simVertices);
-
-  edm::Handle<edm::SimTrackContainer> simTracks;
-  e.getByToken(simTrackToken,simTracks);
-
+  /*recHitCombinations are a vector of a "vector of rech hits" which were used to create a seed. Every seed has a parent recHitCombination(from which the final 2/3 hits of the seed come.You can access the parent recHitCombination of the seed using the hitCombinationId like this:"int32_t hitCombinationId =  ((const SiTrackerGSMatchedRecHit2D*) (&*(seed.recHits().first)))->hitCombinationId();",where "seed" is some particular seed. 
+  */  
   std::auto_ptr<std::vector<bool> > hitMasks(new std::vector<bool>());
 
   // the hits to be skipped
@@ -113,55 +104,63 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   // loop over the seeds
   for (unsigned seednr = 0; seednr < seeds->size(); ++seednr){
-    
+    //Running for one particular seed now.
     const BasicTrajectorySeed seed = seeds->at(seednr);
     if(seed.nHits()==0){
       edm::LogError("TrackCandidateProducer") << "empty trajectory seed in TrajectorySeedCollection" << std::endl;
       return;
     }
 
-    // Get the combination of hits that produced the seed
+    // Get the recHitCombination that produced the seed //------------------------------
     int32_t hitCombinationId =  ((const SiTrackerGSMatchedRecHit2D*) (&*(seed.recHits().first)))->hitCombinationId();
     const FastTMRecHitCombination & recHitCombination = recHitCombinations->at(hitCombinationId);
+    //----------------------------------------------------------------------------------
 
-    // Count number of crossed layers, apply overlap rejection
-    std::vector<TrajectorySeedHitCandidate> recHitCandidates;
+    //Initialize empty recHitCandidates and one rechHitCandidate //---------------------
+    std::vector<TrajectorySeedHitCandidate> recHitCandidates; //Hit candidates to be used to make a track.
     TrajectorySeedHitCandidate recHitCandidate;
-    unsigned numberOfCrossedLayers = 0;
-    //--------------------------------------------------------ak
+    //----------------------------------------------------------------------------------
+
+    // Fill the recHitCandidates with all the seedHits to begin with //-----------------
     TrajectorySeed::range hitRange = seed.recHits();
     for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
       recHitCandidates.push_back(TrajectorySeedHitCandidate((const SiTrackerGSMatchedRecHit2D*) (&*ihit),
 							    trackerGeometry.product(),
-							    trackerTopology.product()));}
-    //--------------------------------------------------------ak
-    int hitCheck=0;
+							    trackerTopology.product()));
+    }
+    //----------------------------------------------------------------------------------
+    
+    unsigned numberOfCrossedLayers = seed.nHits(); //Initialized with number of seedHits as recHitCandidates already contains the seedHits.
+    bool passedLastSeedHit = false;
+    
+    //Create a pointer to the last hit of the seed //----------------------------------
     TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
     const TrackingRecHit* recHitLast=&(*LastHit);
+    //---------------------------------------------------------------------------------
+    //Loop over all hits in the recHit Combination
     for (const auto & _hit : recHitCombination) {
-      //---ak
-      //std::cout<<"BeforeCheck1"<<std::endl;
+      //Check if the present hit in the recHitCombination is the last hit if the seed //----------------
       if(((const SiTrackerGSMatchedRecHit2D*)(recHitLast)
-	  ->sharesInput(&_hit,TrackingRecHit::all)))
-	{hitCheck=1;
-	  //std::cout<<"BeforeCheck2"<<std::endl;
-	  continue;}       
-      //std::cout<<"BeforeCheck3"<<std::endl;
+	  ->sharesInput(&_hit,TrackingRecHit::all))){
+	passedLastSeedHit=true;
+	  continue;
+      }   
+      //--------------------------------------------------------------------------------------------------
       
-      if(hitCheck==0)continue;
-      //---ak
+      if(passedLastSeedHit==false)continue; //If not passed last hit of seed, moving to the next hit in the recHitCombination.
+      //This has been done so that track rec hits doe not conatin the hits that were skipped by the seed. 
+
       if(hitMasks_exists
 	 && size_t(_hit.id()) < hitMasks->size() 
-	 && hitMasks->at(_hit.id()))
-	{
-	  continue;
-	}
+	 && hitMasks->at(_hit.id())){
+	continue;
+      }
       recHitCandidate = TrajectorySeedHitCandidate(&_hit,trackerGeometry.product(),trackerTopology.product());
-      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
+      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back())){
 	++numberOfCrossedLayers;
       }
 
-      if( recHitCandidates.size() == 0 ||                                                // add the first seeding hit in any case
+      if( recHitCandidates.size() == 0 ||
 	  !rejectOverlaps ||                                                             // without overlap rejection:   add each hit
 	  recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||         // with overlap rejection:      only add if hits are not on the same layer
 	  recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ){
