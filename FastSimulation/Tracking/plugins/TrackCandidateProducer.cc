@@ -135,12 +135,12 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     
     //Create a pointer to the last hit of the seed //----------------------------------
     TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
-    const TrackingRecHit* recHitLast=&(*LastHit);
+    const TrackingRecHit* LastSeedHit=&(*LastHit);
     //---------------------------------------------------------------------------------
     //Loop over all hits in the recHit Combination
     for (const auto & _hit : recHitCombination) {
       //Check if the present hit in the recHitCombination is the last hit if the seed //----------------
-      if(((const SiTrackerGSMatchedRecHit2D*)(recHitLast)
+      if(((const SiTrackerGSMatchedRecHit2D*)(LastSeedHit)
 	  ->sharesInput(&_hit,TrackingRecHit::all))){
 	passedLastSeedHit=true;
 	  continue;
