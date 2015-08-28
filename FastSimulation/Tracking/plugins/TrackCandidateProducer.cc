@@ -156,14 +156,13 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 	continue;
       }
       recHitCandidate = TrajectorySeedHitCandidate(&_hit,trackerGeometry.product(),trackerTopology.product());
-      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back())){
+      if (!recHitCandidate.isOnTheSameLayer(recHitCandidates.back())){
 	++numberOfCrossedLayers;
       }
-
-      if( recHitCandidates.size() == 0 ||
-	  !rejectOverlaps ||                                                             // without overlap rejection:   add each hit
-	  recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||         // with overlap rejection:      only add if hits are not on the same layer
-	  recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ){
+      
+      if(!rejectOverlaps ||                                                             // without overlap rejection:   add each hit
+	 recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||         // with overlap rejection:      only add if hits are not on the same layer
+	 recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ){
 	recHitCandidates.push_back(recHitCandidate);
       }
       else if ( recHitCandidate.localError() < recHitCandidates.back().localError() ){
@@ -173,7 +172,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     if ( numberOfCrossedLayers < minNumberOfCrossedLayers ) {
       continue;
     }
-
+    
     // Convert TrajectorySeedHitCandidate to TrackingRecHit and split hits
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
