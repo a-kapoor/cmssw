@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 recoTrackSelectorPSet = cms.PSet(
-    src = cms.InputTag("generalTracks"),
+    src = cms.InputTag('initialStepTracks'),
     maxChi2 = cms.double(10000.0),
     tip = cms.double(120.0),
     minRapidity = cms.double(-5.0),

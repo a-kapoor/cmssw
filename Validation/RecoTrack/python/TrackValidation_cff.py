@@ -127,31 +127,7 @@ cutsRecoTracksFromPVMuonSeededStepOutInHp = cutsRecoTracksMuonSeededStepOutInHp.
 ## MTV instances
 trackValidator= Validation.RecoTrack.MultiTrackValidator_cfi.multiTrackValidator.clone()
 
-trackValidator.label=cms.VInputTag(cms.InputTag("generalTracks"),
-                                   cms.InputTag("cutsRecoTracksHp"),
-                                   cms.InputTag("cutsRecoTracksInitialStep"),
-                                   cms.InputTag("cutsRecoTracksInitialStepHp"),
-                                   cms.InputTag("cutsRecoTracksLowPtTripletStep"),
-                                   cms.InputTag("cutsRecoTracksLowPtTripletStepHp"),
-                                   cms.InputTag("cutsRecoTracksPixelPairStep"),
-                                   cms.InputTag("cutsRecoTracksPixelPairStepHp"),
-                                   cms.InputTag("cutsRecoTracksDetachedTripletStep"),
-                                   cms.InputTag("cutsRecoTracksDetachedTripletStepHp"),
-                                   cms.InputTag("cutsRecoTracksMixedTripletStep"),
-                                   cms.InputTag("cutsRecoTracksMixedTripletStepHp"),
-                                   cms.InputTag("cutsRecoTracksPixelLessStep"),
-                                   cms.InputTag("cutsRecoTracksPixelLessStepHp"),
-                                   cms.InputTag("cutsRecoTracksTobTecStep"),
-                                   cms.InputTag("cutsRecoTracksTobTecStepHp"),
-                                   cms.InputTag("cutsRecoTracksJetCoreRegionalStep"),
-                                   cms.InputTag("cutsRecoTracksJetCoreRegionalStepHp"),
-                                   cms.InputTag("cutsRecoTracksMuonSeededStepInOut"),
-                                   cms.InputTag("cutsRecoTracksMuonSeededStepInOutHp"),
-                                   cms.InputTag("cutsRecoTracksMuonSeededStepOutIn"),
-                                   cms.InputTag("cutsRecoTracksMuonSeededStepOutInHp"),
-                                   cms.InputTag("cutsRecoTracksBtvLike"),
-                                   cms.InputTag("cutsRecoTracksAK4PFJets"),
-                                   )
+trackValidator.label=cms.VInputTag(cms.InputTag("cutsRecoTracksInitialStep"))
 trackValidator.useLogPt=cms.untracked.bool(True)
 trackValidator.dodEdxPlots = True
 trackValidator.doPVAssociationPlots = True
@@ -240,31 +216,7 @@ trackValidatorAllTPEfficStandalone = trackValidatorAllTPEffic.clone(
 
 # the track selectors
 tracksValidationSelectors = cms.Sequence(
-    cutsRecoTracksHp*
-    cutsRecoTracksInitialStep*
-    cutsRecoTracksInitialStepHp*
-    cutsRecoTracksLowPtTripletStep*
-    cutsRecoTracksLowPtTripletStepHp*
-    cutsRecoTracksPixelPairStep*
-    cutsRecoTracksPixelPairStepHp*
-    cutsRecoTracksDetachedTripletStep*
-    cutsRecoTracksDetachedTripletStepHp*
-    cutsRecoTracksMixedTripletStep*
-    cutsRecoTracksMixedTripletStepHp*
-    cutsRecoTracksPixelLessStep*
-    cutsRecoTracksPixelLessStepHp*
-    cutsRecoTracksTobTecStep*
-    cutsRecoTracksTobTecStepHp*
-    cutsRecoTracksJetCoreRegionalStep*
-    cutsRecoTracksJetCoreRegionalStepHp*
-    cutsRecoTracksMuonSeededStepInOut*
-    cutsRecoTracksMuonSeededStepInOutHp*
-    cutsRecoTracksMuonSeededStepOutIn*
-    cutsRecoTracksMuonSeededStepOutInHp*
-    cutsRecoTracksBtvLike*
-    ak4JetTracksAssociatorAtVertexPFAll*
-    cutsRecoTracksAK4PFJets
-)
+    cutsRecoTracksInitialStep)
 tracksValidationSelectorsFromPV = cms.Sequence(
     trackRefsForValidation*
     trackRefsFromPV*
@@ -325,11 +277,7 @@ tracksPreValidationStandalone = cms.Sequence(
 
 # selectors go into separate "prevalidation" sequence
 tracksValidation = cms.Sequence(
-    trackValidator +
-    trackValidatorFromPV +
-    trackValidatorFromPVAllTP +
-    trackValidatorAllTPEffic
-)
+    trackValidator)
 
 tracksValidationStandalone = cms.Sequence(
     ak4PFL1FastL2L3CorrectorChain+
