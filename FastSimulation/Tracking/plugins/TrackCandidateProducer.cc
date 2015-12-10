@@ -149,7 +149,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     TrajectorySeedHitCandidate currentTrackerHit;  
     for(const auto & _hit : recHitCombination) {
       currentTrackerHit = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
-      if((LastSeedHit.subDetId()==currentTrackerHit.subDetId()))
+      if((LastSeedHit.globalPosition()==currentTrackerHit.globalPosition()))
 	{
 	  passedLastSeedHit=true;
 	  continue;
