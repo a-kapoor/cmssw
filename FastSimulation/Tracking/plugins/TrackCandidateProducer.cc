@@ -113,8 +113,6 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   // loop over the seeds
   for (unsigned seednr = 0; seednr < seeds->size(); ++seednr){
-
-    
       const TrajectorySeed seed = (*seeds)[seednr];
     if(seed.nHits()==0){
       edm::LogError("TrackCandidateProducer") << "empty trajectory seed in TrajectorySeedCollection: skip" << std::endl;
@@ -131,33 +129,50 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // select hits, temporarily store as TrajectorySeedHitCandidates
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
-    unsigned numberOfCrossedLayers = 0;      
-    for (const auto & _hit : recHitCombination) {
-	
-	
-	// apply hit masking
-	if(hitMaskHelper 
-	   && hitMaskHelper->mask(_hit.get())){
-	    continue;
-	}
 
+    TrajectorySeed::range hitRange = seed.recHits();
+    for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
+      recHitCandidates.push_back(TrajectorySeedHitCandidate((const FastTrackerRecHit*)(&*ihit),
+							    trackerGeometry.product(),
+							    trackerTopology.product()));
+    }
+    unsigned numberOfCrossedLayers = seed.nHits();
+    bool passedLastSeedHit = false;
+    
+    //Create a pointer to the last hit of the seed //----------------------------------
+    TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
+    //TrajectorySeed::const_iterator LastHit=(seed.recHits().second)-1;
+    const TrackingRecHit* LastSeedHit_i=&(*LastHit);
+    TrajectorySeedHitCandidate LastSeedHit=TrajectorySeedHitCandidate((const FastTrackerRecHit*)(LastSeedHit_i),
+								      trackerGeometry.product(),
+								      trackerTopology.product());
+    TrajectorySeedHitCandidate currentTrackerHit;  
+    for(const auto & _hit : recHitCombination) {
+      currentTrackerHit = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
+      if((LastSeedHit.globalPosition()==currentTrackerHit.globalPosition()))
+	{
+	  passedLastSeedHit=true;
+	  continue;
+	}   
+      if(passedLastSeedHit==false)continue; //If not passed last hit of seed, moving to the next hit in the recHitCombination.
+      //This has been done so that track rec hits doe not conatin the hits that were skipped by the seed. 
+      
+      // apply hit masking
+      if(hitMaskHelper 
+	 && hitMaskHelper->mask(_hit.get())){
+	continue;
+      }
+      
       recHitCandidate = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
-      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
+      if (!recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
 	++numberOfCrossedLayers;
       }
-
+      
       // hit selection
       //         - always select first hit
-      if(        recHitCandidates.size() == 0 ) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of *no* verlap rejection: select all hits
-      else if(   !rejectOverlaps) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
       //         - in case of overlap rejection: 
       //              - select hit if it is not on same layer as previous hit
-      else if(   recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||
+      else if(!rejectOverlaps || recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||
 		 recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ) {
 	  recHitCandidates.push_back(recHitCandidate);
       }
