@@ -131,9 +131,27 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // select hits, temporarily store as TrajectorySeedHitCandidates
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
-    unsigned numberOfCrossedLayers = 0;      
+    TrajectorySeed::range hitRange = seed.recHits();//Total Hits in a seed
+    for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
+      recHitCandidates.push_back(TrajectorySeedHitCandidate((const FastTrackerRecHit*)(&*ihit),
+							    trackerGeometry.product(),
+							    trackerTopology.product()));
+    }//recHitCandidates contains all the seedHits
+    unsigned numberOfCrossedLayers = seed.nHits();
+    bool passedLastSeedHit = false;
+    TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
+    const TrackingRecHit* LastSeedHit_i=&(*LastHit);
+    TrajectorySeedHitCandidate LastSeedHit=TrajectorySeedHitCandidate((const FastTrackerRecHit*)(LastSeedHit_i),trackerGeometry.product(),trackerTopology.product());
     for (const auto & _hit : recHitCombination) {
-	
+      TrajectorySeedHitCandidate currentTrackerHit=TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
+      if(LastSeedHit.hit()->sameId(currentTrackerHit.hit()))      
+//if(LastSeedHit.hit()->geographicalId().rawId()==currentTrackerHit.hit()->geographicalId().rawId())      
+//if((LastSeedHit.globalPosition()==currentTrackerHit.globalPosition()))
+	{
+	  passedLastSeedHit=true;
+	  continue;
+	}
+      if(passedLastSeedHit==false)continue;
 	
 	// apply hit masking
 	if(hitMaskHelper 
@@ -141,39 +159,25 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 	    continue;
 	}
 
-      recHitCandidate = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
-      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
-	++numberOfCrossedLayers;
-      }
 
-      // hit selection
-      //         - always select first hit
-      if(        recHitCandidates.size() == 0 ) {
+	recHitCandidate = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
+	if (!recHitCandidate.isOnTheSameLayer(recHitCandidates.back())){
+	  ++numberOfCrossedLayers;
+	}
+      
+	if(!rejectOverlaps ||                                                             // without overlap rejection:   add each hit
+	   recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||         // with overlap rejection:      only add if hits are not on the same layer
+	   recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ){
 	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of *no* verlap rejection: select all hits
-      else if(   !rejectOverlaps) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of overlap rejection: 
-      //              - select hit if it is not on same layer as previous hit
-      else if(   recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||
-		 recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of overlap rejection and hit is on same layer as previous hit 
-      //              - replace previous hit with current hit if it has better precision
-      else if (  recHitCandidate.localError() < recHitCandidates.back().localError() ){
+	}
+	else if ( recHitCandidate.localError() < recHitCandidates.back().localError() ){
 	  recHitCandidates.back() = recHitCandidate;
-
-      }
+	}
     }
-
-    // TODO: verify it makes sense to have this selection
     if ( numberOfCrossedLayers < minNumberOfCrossedLayers ) {
       continue;
     }
-
+      
     // Convert TrajectorySeedHitCandidate to TrackingRecHit and split hits
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
