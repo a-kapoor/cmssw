@@ -14,9 +14,7 @@
 #include "SimDataFormats/Track/interface/SimTrackContainer.h"
 #include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 #include "FastSimulation/Tracking/interface/TrajectorySeedHitCandidate.h"
-#include "RecoTracker/TkHitPairs/interface/RecHitsSortedInPhi.h"
 #include "DataFormats/TrajectorySeed/interface/TrajectorySeedCollection.h"
-
 #include "FastSimulation/Tracking/interface/SeedingTree.h"
 #include "FastSimulation/Tracking/interface/TrackingLayer.h"
 #include "RecoTracker/TkTrackingRegions/interface/TrackingRegion.h"
@@ -43,7 +41,6 @@ class TrajectorySeedProducer:
         const MagneticFieldMap* magneticFieldMap;
         const TrackerGeometry* trackerGeometry;
         const TrackerTopology* trackerTopology;
-	//const RecHitsSortedInPhi * ih;
         std::shared_ptr<PropagatorWithMaterial> thePropagator;
 
         double simTrack_pTMin;
@@ -53,7 +50,6 @@ class TrajectorySeedProducer:
         unsigned int minLayersCrossed;
 
         std::vector<std::vector<TrackingLayer>> seedingLayers;
-	//std::vector<edm::EDGetTokenT<std::vector<unsigned int> > > skipSimTrackIdTokens;
         double originRadius;
         double ptMin;
         double originHalfLength;
@@ -68,7 +64,6 @@ class TrajectorySeedProducer:
         edm::EDGetTokenT<FastTrackerRecHitCombinationCollection> recHitCombinationsToken;
 	edm::EDGetTokenT<std::vector<bool> > hitMasksToken;        
     public:
-	//	const RecHitsSortedInPhi * ih;
     TrajectorySeedProducer(const edm::ParameterSet& conf);
     
     virtual ~TrajectorySeedProducer()
@@ -83,7 +78,7 @@ class TrajectorySeedProducer:
     \param theSimVertex the associated SimVertex of the SimTrack.
     \return true if a track fulfills the requirements.
     */
-    //virtual bool passSimTrackQualityCuts(const SimTrack& theSimTrack, const SimVertex& theSimVertex) const;
+   
 
     //! method checks if a TrajectorySeedHitCandidate fulfills the quality requirements.
     /*!
@@ -193,10 +188,8 @@ class TrajectorySeedProducer:
             unsigned int trackerHit
     ) const;
     
-    //    typedef std::vector<TrackingRegion* > Regions;
     typedef std::vector<std::unique_ptr<TrackingRegion> > Regions;
     Regions regions;
-    //TrackingRegionProducer* theRegionProducer;
 
     std::unique_ptr<TrackingRegionProducer> theRegionProducer;
     edm::EDGetTokenT<MeasurementTrackerEvent> measurementTrackerEventToken;
