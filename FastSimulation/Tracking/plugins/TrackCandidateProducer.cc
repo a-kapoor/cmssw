@@ -62,6 +62,7 @@ TrackCandidateProducer::TrackCandidateProducer(const edm::ParameterSet& conf)
   simVertexToken = consumes<edm::SimVertexContainer>(simTrackLabel);
   simTrackToken = consumes<edm::SimTrackContainer>(simTrackLabel);
 
+
   edm::InputTag seedLabel = conf.getParameter<edm::InputTag>("src");
   seedToken = consumes<edm::View<TrajectorySeed> >(seedLabel);
 
@@ -103,7 +104,7 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
   edm::Handle<edm::SimTrackContainer> simTracks;
   e.getByToken(simTrackToken,simTracks);
 
-  // the hits to be skipped
+  // the hits to be skipped based on hitMasking from other iterations
   std::unique_ptr<HitMaskHelper> hitMaskHelper;
   if (hitMasks_exists == true){
       edm::Handle<std::vector<bool> > hitMasks;
@@ -147,68 +148,71 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     // select hits, temporarily store as TrajectorySeedHitCandidates
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
-    unsigned numberOfCrossedLayers = 0;      
+    TrajectorySeed::range hitRange = seed.recHits();//Total Hits in a seed
+    for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
+      recHitCandidates.push_back(TrajectorySeedHitCandidate((const FastTrackerRecHit*)(&*ihit),
+							    trackerGeometry.product(),
+							    trackerTopology.product()));
+    }//recHitCandidates contains all the seedHits
+    unsigned numberOfCrossedLayers = seed.nHits();
+    bool passedLastSeedHit = false;
+    TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
+    const TrackingRecHit* LastSeedHit_i=&(*LastHit);
+    TrajectorySeedHitCandidate LastSeedHit=TrajectorySeedHitCandidate((const FastTrackerRecHit*)(LastSeedHit_i),trackerGeometry.product(),trackerTopology.product());
     for (const auto & _hit : recHitCombination) {
 	
-	
-	// apply hit masking
-	if(hitMaskHelper 
-	   && hitMaskHelper->mask(_hit.get())){
-	    continue;
+      TrajectorySeedHitCandidate currentTrackerHit=TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
+      if(LastSeedHit.hit()->sameId(currentTrackerHit.hit()))      
+	//if(LastSeedHit.hit()->geographicalId().rawId()==currentTrackerHit.hit()->geographicalId().rawId())      
+	//if((LastSeedHit.globalPosition()==currentTrackerHit.globalPosition()))
+	{
+	  passedLastSeedHit=true;
+	  continue;
 	}
+      if(passedLastSeedHit==false)continue;
+      
+      // apply hit masking
+      if(hitMaskHelper 
+	 && hitMaskHelper->mask(_hit.get())){
+	continue;
+      }
+
 
       recHitCandidate = TrajectorySeedHitCandidate(_hit.get(),trackerGeometry.product(),trackerTopology.product());
-      if ( recHitCandidates.size() == 0 || !recHitCandidate.isOnTheSameLayer(recHitCandidates.back()) ) {
+      if (!recHitCandidate.isOnTheSameLayer(recHitCandidates.back())){
 	++numberOfCrossedLayers;
       }
-
-      // hit selection
-      //         - always select first hit
-      if(        recHitCandidates.size() == 0 ) {
-	  recHitCandidates.push_back(recHitCandidate);
+      
+      if(!rejectOverlaps ||                                                             // without overlap rejection:   add each hit
+	 recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||         // with overlap rejection:      only add if hits are not on the same layer
+	 recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ){
+	recHitCandidates.push_back(recHitCandidate);
       }
-      //         - in case of *no* verlap rejection: select all hits
-      else if(   !rejectOverlaps) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of overlap rejection: 
-      //              - select hit if it is not on same layer as previous hit
-      else if(   recHitCandidate.subDetId()    != recHitCandidates.back().subDetId() ||
-		 recHitCandidate.layerNumber() != recHitCandidates.back().layerNumber() ) {
-	  recHitCandidates.push_back(recHitCandidate);
-      }
-      //         - in case of overlap rejection and hit is on same layer as previous hit 
-      //              - replace previous hit with current hit if it has better precision
-      else if (  recHitCandidate.localError() < recHitCandidates.back().localError() ){
-	  recHitCandidates.back() = recHitCandidate;
-
+      else if ( recHitCandidate.localError() < recHitCandidates.back().localError() ){
+	recHitCandidates.back() = recHitCandidate;
       }
     }
-
-    // TODO: verify it makes sense to have this selection
     if ( numberOfCrossedLayers < minNumberOfCrossedLayers ) {
       continue;
     }
 
-
     // order hits along the seed direction
     bool oiSeed = seed.direction()==oppositeToMomentum;
     if (oiSeed)
-    {
+      {
 	std::reverse(recHitCandidates.begin(),recHitCandidates.end());
-    }
-
+      }
+    
     // Convert TrajectorySeedHitCandidate to TrackingRecHit and split hits
     edm::OwnVector<TrackingRecHit> trackRecHits;
     for ( unsigned index = 0; index<recHitCandidates.size(); ++index ) {
-	if(splitHits){
-	    hitSplitter.split(*recHitCandidates[index].hit(),trackRecHits,oiSeed);
-	}
-	else {
-	    trackRecHits.push_back(recHitCandidates[index].hit()->clone());
-	}
+      if(splitHits){
+	hitSplitter.split(*recHitCandidates[index].hit(),trackRecHits,oiSeed);
+      }
+      else {
+	trackRecHits.push_back(recHitCandidates[index].hit()->clone());
+      }
     }
-
 
     // set the recHitCombinationIndex
     fastTrackingHelper::setRecHitCombinationIndex(trackRecHits,icomb);
@@ -224,13 +228,12 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     //   - check validity and transform
     if (!initialTSOS.isValid()) continue; 
     PTrajectoryStateOnDet PTSOD = trajectoryStateTransform::persistentState(initialTSOS,trackRecHits.front().geographicalId().rawId()); 
+
     // add track candidate to output collection
     output->push_back(TrackCandidate(trackRecHits,seed,PTSOD,edm::RefToBase<TrajectorySeed>(seeds,seednr)));
+    }
+  }
+    // Save the track candidates
+    e.put(output);
 
   }
-  }
-  
-  // Save the track candidates
-  e.put(output);
-
-}
