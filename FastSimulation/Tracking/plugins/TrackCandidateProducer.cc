@@ -1,3 +1,4 @@
+#include <iostream>
 #include "FastSimulation/Tracking/plugins/TrackCandidateProducer.h"
 
 #include <memory>
@@ -117,7 +118,8 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
 
   // loop over the seeds
   for (unsigned seednr = 0; seednr < seeds->size(); ++seednr){
-
+    std::cout<<"How many seeds?:"<<seeds->size()<<std::endl;
+    std::cout<<"Which Seed?:"<<seednr+1<<std::endl;
     
       const TrajectorySeed seed = (*seeds)[seednr];
       std::vector<int32_t> recHitCombinationIndices;
@@ -149,12 +151,18 @@ TrackCandidateProducer::produce(edm::Event& e, const edm::EventSetup& es) {
     std::vector<TrajectorySeedHitCandidate> recHitCandidates;
     TrajectorySeedHitCandidate recHitCandidate;
     TrajectorySeed::range hitRange = seed.recHits();//Total Hits in a seed
+    std::cout<<"seed.recHits()?:"<<seed.recHits()<<std::endl;
     for (TrajectorySeed::const_iterator ihit = hitRange.first; ihit != hitRange.second; ++ihit) {
+      std::cout<<"hitRange.first?:"<<hitRange.first<<std::endl;
+      std::cout<<"hitRange.second?:"<<hitRange.second<<std::endl;
+      std::cout<<"seed.nHits()?:"<<seed.nHits()<<std::endl;
+      std::cout<<"Which hit?:"<<ihit<<std::endl;
       recHitCandidates.push_back(TrajectorySeedHitCandidate((const FastTrackerRecHit*)(&*ihit),
 							    trackerGeometry.product(),
 							    trackerTopology.product()));
     }//recHitCandidates contains all the seedHits
     unsigned numberOfCrossedLayers = seed.nHits();
+    //std::cout<<"numberOfCrossedLayers"<<numberOfCrossedLayers
     bool passedLastSeedHit = false;
     TrackingRecHitCollection::const_iterator LastHit=(seed.recHits().second)-1;
     const TrackingRecHit* LastSeedHit_i=&(*LastHit);
