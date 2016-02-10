@@ -15,6 +15,7 @@ lowPtTripletStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.traje
     layerList = RecoTracker.IterativeTracking.InitialStep_cff.initialStepSeedLayers.layerList.value(),
     RegionFactoryPSet = RecoTracker.IterativeTracking.InitialStep_cff.initialStepSeeds.RegionFactoryPSet,
     hitMasks = cms.InputTag("lowPtTripletStepMasks"),
+    pixelTripletGeneratorFactory = RecoTracker.IterativeTracking.LowPtTripletStep_cff.lowPtTripletStepSeeds.OrderedHitsFactoryPSet.GeneratorPSet
 )
 
 # track candidates
