@@ -20,6 +20,9 @@
 #include "FastSimulation/Tracking/interface/TrackingLayer.h"
 #include "RecoTracker/TkTrackingRegions/interface/TrackingRegion.h"
 #include "RecoTracker/TkTrackingRegions/interface/TrackingRegionProducer.h"
+#include "RecoTracker/TkHitPairs/interface/HitPairGeneratorFromLayerPair.h"
+#include "RecoPixelVertexing/PixelTriplets/interface/HitTripletGeneratorFromPairAndLayers.h"
+#include "RecoPixelVertexing/PixelTriplets/interface/HitTripletGeneratorFromPairAndLayersFactory.h"
 
 #include <memory>
 #include <vector>
@@ -192,7 +195,7 @@ class TrajectorySeedProducer:
     typedef std::vector<std::unique_ptr<TrackingRegion> > Regions;
     Regions regions;
     //TrackingRegionProducer* theRegionProducer;
-
+    std::unique_ptr<HitTripletGeneratorFromPairAndLayers> pixelTripletGenerator;
     std::unique_ptr<TrackingRegionProducer> theRegionProducer;
     edm::EDGetTokenT<MeasurementTrackerEvent> measurementTrackerEventToken;
     const MeasurementTrackerEvent * measurementTrackerEvent;

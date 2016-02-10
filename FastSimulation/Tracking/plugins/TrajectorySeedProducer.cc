@@ -54,6 +54,13 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf):
     theRegionProducer(nullptr)
 {
 
+  if(conf.exists("pixelTripletGeneratorFactory"))
+    {
+      const edm::ParameterSet & tripletConfig = conf.getParameter<edm::ParameterSet>("pixelTripletGeneratorFactory");
+      auto iC = consumesCollector();
+      pixelTripletGenerator.reset(HitTripletGeneratorFromPairAndLayersFactory::get()->create(tripletConfig.getParameter<std::string>("ComponentName"),tripletConfig,iC));
+    }
+
     produces<TrajectorySeedCollection>();
 
     // tokens
