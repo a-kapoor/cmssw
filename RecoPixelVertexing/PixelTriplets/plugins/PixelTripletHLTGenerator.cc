@@ -86,10 +86,12 @@ void PixelTripletHLTGenerator::hitTriplets(
     const std::vector<const DetLayer *> & thirdLayerDetLayer,
     const int nThirdLayers)
 {
-    auto outSeq =  doublets.detLayer(HitDoublets::outer)->seqNum();
-
-    float regOffset = region.origin().perp(); //try to take account of non-centrality (?)
-    
+  std::cout<<std::endl;
+  std::cout<<"Checking Triplet Compatibilty"<<std::endl;
+  auto outSeq =  doublets.detLayer(HitDoublets::outer)->seqNum();
+  
+  float regOffset = region.origin().perp(); //try to take account of non-centrality (?)
+  
     declareDynArray(ThirdHitRZPrediction<PixelRecoLineRZ>, nThirdLayers, preds);
     declareDynArray(ThirdHitCorrection, nThirdLayers, corrections);
   
@@ -109,6 +111,7 @@ void PixelTripletHLTGenerator::hitTriplets(
 
   // fill the prediction vector
   for (int il=0; il<nThirdLayers; ++il) {
+    std::cout<<"number of third layers = "<<nThirdLayers<<std::endl;
     auto const & hits = *thirdHitMap[il];
     ThirdHitRZPrediction<PixelRecoLineRZ> & pred = preds[il];
     pred.initLayer(thirdLayerDetLayer[il]);
@@ -144,6 +147,7 @@ void PixelTripletHLTGenerator::hitTriplets(
   float curv = PixelRecoUtilities::curvature(1.f/region.ptMin(), es);
   
   for (std::size_t ip =0;  ip!=doublets.size(); ip++) {
+    std::cout<<"doublets size ="<<doublets.size()<<std::endl;
     auto xi = doublets.x(ip,HitDoublets::inner);
     auto yi = doublets.y(ip,HitDoublets::inner);
     auto zi = doublets.z(ip,HitDoublets::inner);
@@ -172,11 +176,12 @@ void PixelTripletHLTGenerator::hitTriplets(
     for (int il=0; il!=nThirdLayers; ++il) {
       const DetLayer * layer = thirdLayerDetLayer[il];
       auto barrelLayer = layer->isBarrel();
-
+      std::cout<<"Barrel Layer Check 1"<<std::endl;
       if ( (!barrelLayer) & (toPos != std::signbit(layer->position().z())) ) continue;
-
+      std::cout<<"Barrel Layer Check 2"<<std::endl;
+      std::cout<<"hitTree check 1"<<std::endl;
       if (hitTree[il].empty()) continue; // Don't bother if no hits
-      
+      std::cout<<"hitTree check 2"<<std::endl;
       auto const & hits = *thirdHitMap[il];
       
       auto & correction = corrections[il];
@@ -202,8 +207,9 @@ void PixelTripletHLTGenerator::hitTriplets(
 	  radius = Range(max(rzRange.min(), predictionRZ.detSize().min()),
 			 min(rzRange.max(), predictionRZ.detSize().max()) );
 	}
+	std::cout<<"radius empty ??"<<std::endl;
 	if (radius.empty()) continue;
-
+	std::cout<<"radius not empty !!"<<std::endl;
 	// std::cout << "++R " << radius.min() << " " << radius.max()  << std::endl;
 
 	auto rPhi1 = predictionRPhitmp(radius.max());
@@ -294,23 +300,33 @@ void PixelTripletHLTGenerator::hitTriplets(
 	float vErr = nSigmaRZ *hits.dv[KDdata];
 	Range hitRange(p3_v-vErr, p3_v+vErr);
 	Range crossingRange = allowed.intersection(hitRange);
+	std::cout<<"crossingRange empty ??"<<std::endl;
 	if (crossingRange.empty())  continue;
-	
+	std::cout<<"crossingRange not empty !!"<<std::endl;
 	float ir = 1.f/hits.rv(KDdata);
 	float phiErr = nSigmaPhi * hits.drphi[KDdata]*ir;
         bool nook=true;
 	for (int icharge=-1; icharge <=1; icharge+=2) {
+	  std::cout<<"Inside charge loop:: icharge="<<icharge<<std::endl;
 	  Range rangeRPhi = predictionRPhi(hits.rv(KDdata), icharge);
 	  correction.correctRPhiRange(rangeRPhi);
+	  std::cout<<"Checking PhiInRange"<<std::endl;
+	  std::cout<<"Values-> p3_phi="<<p3_phi<<std::endl<<"rangeRPhi.first*ir-phiErr="<<rangeRPhi.first*ir-phiErr<<std::endl<<"rangeRPhi.second*ir+phiErr="<<rangeRPhi.second*ir+phiErr<<std::endl;
 	  if (checkPhiInRange(p3_phi, rangeRPhi.first*ir-phiErr, rangeRPhi.second*ir+phiErr)) {
+	    std::cout<<"Passed PhiInRange"<<std::endl;
 	    // insert here check with comparitor
+
 	    OrderedHitTriplet hittriplet( doublets.hit(ip,HitDoublets::inner), doublets.hit(ip,HitDoublets::outer), hits.theHits[KDdata].hit());
+	    std::cout<<"Comparitor check"<<std::endl;
 	    if (!theComparitor  || theComparitor->compatible(hittriplet,region) ) {
+	      std::cout<<"Comparitor check Passed !!, Pushing hittriplet"<<std::endl;
 	      result.push_back( hittriplet );
 	    } else {
 	      LogDebug("RejectedTriplet") << "rejected triplet from comparitor ";
 	    }
+	    std::cout<<"nook check"<<std::endl;
 	    nook=false; break;
+	    std::cout<<"nook check Passed"<<std::endl;
 	  } 
 	}
         if (nook) LogDebug("RejectedTriplet") << "rejected triplet from second phicheck " << p3_phi;
