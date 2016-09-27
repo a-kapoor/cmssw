@@ -4,6 +4,7 @@ import FWCore.ParameterSet.Config as cms
 import RecoTracker.IterativeTracking.TobTecStep_cff as _standard
 
 # fast tracking mask producer
+
 import FastSimulation.Tracking.FastTrackerRecHitMaskProducer_cfi
 tobTecStepMasks = FastSimulation.Tracking.FastTrackerRecHitMaskProducer_cfi.maskProducerFromClusterRemover(_standard.tobTecStepClusters)
 
@@ -13,6 +14,9 @@ tobTecStepSeedsTripl = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajec
     layerList = _standard.tobTecStepSeedLayersTripl.layerList.value(),
     RegionFactoryPSet = _standard.tobTecStepSeedsTripl.RegionFactoryPSet,
     hitMasks = cms.InputTag("tobTecStepMasks"),
+    useFSRingSelector = cms.bool(False)
+    #minRing = cms.int32(6),
+    #maxRing = cms.int32(7)
 )
 tobTecStepSeedsTripl.seedFinderSelector.MultiHitGeneratorFactory = _standard.tobTecStepSeedsTripl.OrderedHitsFactoryPSet.GeneratorPSet
 tobTecStepSeedsTripl.seedFinderSelector.MultiHitGeneratorFactory.SeedComparitorPSet=cms.PSet(  ComponentName = cms.string( "none" ) )
@@ -24,6 +28,9 @@ tobTecStepSeedsPair = FastSimulation.Tracking.TrajectorySeedProducer_cfi.traject
     layerList = _standard.tobTecStepSeedLayersPair.layerList.value(),
     RegionFactoryPSet = _standard.tobTecStepSeedsPair.RegionFactoryPSet,
     hitMasks = cms.InputTag("tobTecStepMasks"),
+    useFSRingSelector = cms.bool(True),
+    TECminRing = cms.int32(5),
+    TECmaxRing = cms.int32(5)
 )
 
 #

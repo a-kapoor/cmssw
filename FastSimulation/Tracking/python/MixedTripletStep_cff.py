@@ -13,8 +13,12 @@ import FastSimulation.Tracking.TrajectorySeedProducer_cfi
 mixedTripletStepSeedsA = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajectorySeedProducer.clone(
     layerList = _standard.mixedTripletStepSeedLayersA.layerList.value(),
     RegionFactoryPSet = _standard.mixedTripletStepSeedsA.RegionFactoryPSet,
-    hitMasks = cms.InputTag("mixedTripletStepMasks")
-)
+    hitMasks = cms.InputTag("mixedTripletStepMasks"),
+    useFSRingSelector = cms.bool(True),
+    TECminRing = cms.int32(1),
+    TECmaxRing = cms.int32(1)
+
+    )
 mixedTripletStepSeedsA.seedFinderSelector.pixelTripletGeneratorFactory = _standard.mixedTripletStepSeedsA.OrderedHitsFactoryPSet.GeneratorPSet
 
 
@@ -23,7 +27,8 @@ import FastSimulation.Tracking.TrajectorySeedProducer_cfi
 mixedTripletStepSeedsB = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajectorySeedProducer.clone(
     layerList = _standard.mixedTripletStepSeedLayersB.layerList.value(),
     RegionFactoryPSet = _standard.mixedTripletStepSeedsB.RegionFactoryPSet,
-    hitMasks = cms.InputTag("mixedTripletStepMasks")
+    hitMasks = cms.InputTag("mixedTripletStepMasks"),
+    useFSRingSelector = cms.bool(False)
 )
 mixedTripletStepSeedsB.seedFinderSelector.pixelTripletGeneratorFactory = _standard.mixedTripletStepSeedsB.OrderedHitsFactoryPSet.GeneratorPSet
 

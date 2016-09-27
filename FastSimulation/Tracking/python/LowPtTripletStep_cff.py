@@ -13,6 +13,7 @@ lowPtTripletStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.traje
     layerList = _standard.lowPtTripletStepSeedLayers.layerList.value(),
     RegionFactoryPSet = _standard.lowPtTripletStepSeeds.RegionFactoryPSet,
     hitMasks = cms.InputTag("lowPtTripletStepMasks"),
+    useFSRingSelector = cms.bool(False),
 )
 lowPtTripletStepSeeds.seedFinderSelector.pixelTripletGeneratorFactory = _standard.lowPtTripletStepSeeds.OrderedHitsFactoryPSet.GeneratorPSet
 #lowPtTripletStepSeeds.pixelTripletGeneratorFactory.SeedComparitorPSet=cms.PSet(  ComponentName = cms.string( "none" ) )

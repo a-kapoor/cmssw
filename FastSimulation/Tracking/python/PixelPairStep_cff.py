@@ -13,6 +13,7 @@ pixelPairStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajecto
     layerList = _standard.pixelPairStepSeedLayers.layerList.value(),
     RegionFactoryPSet = _standard.pixelPairStepSeeds.RegionFactoryPSet,
     hitMasks = cms.InputTag("pixelPairStepMasks"),
+    useFSRingSelector = cms.bool(False),
 )
 pixelPairStepSeeds.RegionFactoryPSet.RegionPSet.VertexCollection = cms.InputTag("firstStepPrimaryVerticesBeforeMixing")
 

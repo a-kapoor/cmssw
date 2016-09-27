@@ -12,7 +12,8 @@ import FastSimulation.Tracking.TrajectorySeedProducer_cfi
 detachedTripletStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajectorySeedProducer.clone(
     layerList = _standard.detachedTripletStepSeedLayers.layerList.value(),
     RegionFactoryPSet = _standard.detachedTripletStepSeeds.RegionFactoryPSet,
-    hitMasks = cms.InputTag("detachedTripletStepMasks")
+    hitMasks = cms.InputTag("detachedTripletStepMasks"),
+    useFSRingSelector = cms.bool(False),
 )
 detachedTripletStepSeeds.seedFinderSelector.pixelTripletGeneratorFactory = _standard.detachedTripletStepSeeds.OrderedHitsFactoryPSet.GeneratorPSet
 

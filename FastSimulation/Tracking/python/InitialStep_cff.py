@@ -7,7 +7,8 @@ import RecoTracker.IterativeTracking.InitialStep_cff as _standard
 import FastSimulation.Tracking.TrajectorySeedProducer_cfi
 initialStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajectorySeedProducer.clone(
     layerList = _standard.initialStepSeedLayers.layerList.value(),
-    RegionFactoryPSet = _standard.initialStepSeeds.RegionFactoryPSet
+    RegionFactoryPSet = _standard.initialStepSeeds.RegionFactoryPSet,
+    useFSRingSelector = cms.bool(False)
 )
 initialStepSeeds.seedFinderSelector.pixelTripletGeneratorFactory = _standard.initialStepSeeds.OrderedHitsFactoryPSet.GeneratorPSet
 initialStepSeeds.seedFinderSelector.pixelTripletGeneratorFactory.SeedComparitorPSet.ComponentName = "none"

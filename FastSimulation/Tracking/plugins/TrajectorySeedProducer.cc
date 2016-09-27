@@ -44,6 +44,8 @@
 #include "RecoTracker/TkTrackingRegions/interface/TrackingRegionProducerFactory.h"
 #include "RecoTracker/TkSeedingLayers/interface/SeedingHitSet.h"
 #include "RecoTracker/TkSeedGenerator/interface/SeedCreator.h"
+#include "DataFormats/TrackerCommon/interface/TrackerTopology.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "RecoTracker/TkSeedGenerator/interface/SeedCreatorFactory.h"
 
 // geometry
@@ -70,6 +72,12 @@ private:
 
     // other data members
     unsigned int nHitsPerSeed_;
+
+//////////
+    bool useFSRingSelectorToken;
+    int TECmaxRing=-1;
+    int TECminRing=-1;
+/////////
 
     std::vector<std::vector<TrackingLayer>> seedingLayers;
     SeedingTree<TrackingLayer> _seedingTree;
@@ -98,6 +106,13 @@ TrajectorySeedProducer::TrajectorySeedProducer(const edm::ParameterSet& conf)
 
     // consumes
     recHitCombinationsToken = consumes<FastTrackerRecHitCombinationCollection>(conf.getParameter<edm::InputTag>("recHitCombinations"));
+    useFSRingSelectorToken = conf.getParameter<bool>("useFSRingSelector");
+
+    if(useFSRingSelectorToken==true){
+	TECmaxRing=conf.getParameter<int>("TECmaxRing");
+	TECminRing=conf.getParameter<int>("TECminRing");
+    }
+    
     if (conf.exists("hitMasks"))
     {
         hitMasksToken = consumes<std::vector<bool> >(conf.getParameter<edm::InputTag>("hitMasks"));
@@ -157,9 +172,8 @@ void TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
 
     // services
     edm::ESHandle<TrackerTopology> trackerTopology;
-    
     es.get<TrackerTopologyRcd>().get(trackerTopology);
-    
+    const TrackerTopology* const tTopo = trackerTopology.product();
     // input data
     edm::Handle<FastTrackerRecHitCombinationCollection> recHitCombinations;
     e.getByToken(recHitCombinationsToken, recHitCombinations);
@@ -196,7 +210,7 @@ void TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
     {
         FastTrackerRecHitCombination recHitCombination = (*recHitCombinations)[icomb];
 
-        // create a list of hits cleaned from masked hits
+        // create a list of hits cleaned from masked hits and ring restrictions
         std::vector<const FastTrackerRecHit * > seedHitCandidates;
         for (const auto & _hit : recHitCombination )
         {
@@ -204,6 +218,16 @@ void TrajectorySeedProducer::produce(edm::Event& e, const edm::EventSetup& es)
             {
                 continue;
             }
+	    if(_hit.get()->geographicalId().subdetId() == StripSubdetector::TEC){
+		int ringNumber = tTopo->tecRing(_hit.get()->geographicalId());
+		//std::cout<<"TEC ring "<<ringNumber<<std::endl;
+		if(TECmaxRing>0&&TECminRing>0){
+		    //std::cout<<"TECmaxRing="<<TECmaxRing<<std::endl;
+		    //std::cout<<"TECminRing="<<TECminRing<<std::endl;
+		    if(ringNumber<TECminRing||ringNumber>TECmaxRing)
+			continue;
+		}
+	    }
             seedHitCandidates.push_back(_hit.get());
         }
 

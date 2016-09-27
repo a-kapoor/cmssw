@@ -13,7 +13,10 @@ pixelLessStepSeeds = FastSimulation.Tracking.TrajectorySeedProducer_cfi.trajecto
     layerList = _standard.pixelLessStepSeedLayers.layerList.value(),
     RegionFactoryPSet = _standard.pixelLessStepSeeds.RegionFactoryPSet,
     hitMasks = cms.InputTag("pixelLessStepMasks"),
-)
+    useFSRingSelector = cms.bool(True),
+    TECminRing = cms.int32(1),
+    TECmaxRing = cms.int32(2)
+    )
 pixelLessStepSeeds.seedFinderSelector.MultiHitGeneratorFactory = _standard.pixelLessStepSeeds.OrderedHitsFactoryPSet.GeneratorPSet
 pixelLessStepSeeds.seedFinderSelector.MultiHitGeneratorFactory.refitHits = False
 
