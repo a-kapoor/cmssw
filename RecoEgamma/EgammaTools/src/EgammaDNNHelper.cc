@@ -73,12 +73,12 @@ void EgammaDNNHelper::initScalerFiles(const std::vector<std::string>& availableV
   }
 }
 
-std::pair<uint, std::vector<float>> EgammaDNNHelper::getScaledInputs(
-    const std::map<std::string, float>& variables) const {
+std::pair<uint, std::vector<double>> EgammaDNNHelper::getScaledInputs(
+    const std::map<std::string, double>& variables) const {
   // Call the modelSelector function passing the variables map to return
   // the modelIndex to be used for the current candidate
   const auto modelIndex = modelSelector_(variables);
-  std::vector<float> inputs;
+  std::vector<double> inputs;
   // Loop on the list of requested variables and scaling values for the specific modelIndex
   // Different type of scaling are available: 0=no scaling, 1=standard scaler, 2=minmax
   for (auto& [varName, type, par1, par2] : featuresMap_[modelIndex]) {
@@ -97,14 +97,14 @@ std::pair<uint, std::vector<float>> EgammaDNNHelper::getScaledInputs(
   return std::make_pair(modelIndex, inputs);
 }
 
-std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std::map<std::string, float>>& candidates,
-                                                          const std::vector<tensorflow::Session*>& sessions) const {
+std::vector<std::vector<double>> EgammaDNNHelper::evaluate(const std::vector<std::map<std::string, double>>& candidates,
+                                                           const std::vector<tensorflow::Session*>& sessions) const {
   /*
     Evaluate the PFID DNN for all the electrons/photons. 
     nModels_ are defined depending on modelIndex  --> we need to build N input tensors to evaluate
     the DNNs with batching.
     
-    1) Get all the variable for each candidate  vector<map<string:float>>
+    1) Get all the variable for each candidate  vector<map<string:double>>
     2) Scale the input and select the variables for each model
     2) Prepare the input tensors for the  models
     3) Run the models and get the output for each candidate
@@ -114,7 +114,7 @@ std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std:
     */
   size_t nCandidates = candidates.size();
   std::vector<std::vector<int>> indexMap(nModels_);  // for each model; the list of candidate index is saved
-  std::vector<std::vector<float>> inputsVectors(nCandidates);
+  std::vector<std::vector<double>> inputsVectors(nCandidates);
   std::vector<uint> counts(nModels_);
 
   LogDebug("EgammaDNNHelper") << "Working on " << nCandidates << " candidates";
@@ -132,18 +132,18 @@ std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std:
   // Prepare one input tensors for each model
   std::vector<tensorflow::Tensor> input_tensors(nModels_);
   // Pointers for filling efficiently the input tensors
-  std::vector<float*> input_tensors_pointer(nModels_);
+  std::vector<double*> input_tensors_pointer(nModels_);
   for (size_t i = 0; i < nModels_; i++) {
     LogDebug("EgammaDNNHelper") << "Initializing TF input " << i << " with rows:" << counts[i]
                                 << " and cols:" << nInputs_[i];
-    input_tensors[i] = tensorflow::Tensor{tensorflow::DT_FLOAT, {counts[i], nInputs_[i]}};
-    input_tensors_pointer[i] = input_tensors[i].flat<float>().data();
+    input_tensors[i] = tensorflow::Tensor{tensorflow::DT_DOUBLE, {counts[i], nInputs_[i]}};
+    input_tensors_pointer[i] = input_tensors[i].flat<double>().data();
   }
 
   // Filling the input tensors
   for (size_t m = 0; m < nModels_; m++) {
     LogDebug("EgammaDNNHelper") << "Loading TF input tensor for model: " << m;
-    float* T = input_tensors_pointer[m];
+    double* T = input_tensors_pointer[m];
     for (size_t cand_index : indexMap[m]) {
       for (size_t k = 0; k < nInputs_[m]; k++, T++) {  //Note the input tensor pointer incremented
         *T = inputsVectors[cand_index][k];
@@ -153,7 +153,7 @@ std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std:
 
   // Define the output and run
   // Define the output and run
-  std::vector<std::pair<int, std::vector<float>>> outputs;
+  std::vector<std::pair<int, std::vector<double>>> outputs;
   // Run all the models
   for (size_t m = 0; m < nModels_; m++) {
     if (counts[m] == 0)
@@ -162,12 +162,12 @@ std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std:
     LogDebug("EgammaDNNHelper") << "Run model: " << m << " with " << counts[m] << "objects";
     tensorflow::run(sessions[m], {{cfg_.inputTensorName, input_tensors[m]}}, {cfg_.outputTensorName}, &output);
     // Get the output and save the ElectronDNNEstimator::outputDim numbers along with the ele index
-    const auto& r = output[0].tensor<float, 2>();
+    const auto& r = output[0].tensor<double, 2>();
     // Iterate on the list of elements in the batch --> many electrons
     LogDebug("EgammaDNNHelper") << "Model " << m << " has " << cfg_.outputDim[m] << " nodes!";
     for (uint b = 0; b < counts[m]; b++) {
       //auto outputDim=cfg_.outputDim;
-      std::vector<float> result(cfg_.outputDim[m]);
+      std::vector<double> result(cfg_.outputDim[m]);
       for (size_t k = 0; k < cfg_.outputDim[m]; k++) {
         result[k] = r(b, k);
         LogDebug("EgammaDNNHelper") << "For Object " << b + 1 << " : Node " << k + 1 << " score = " << r(b, k);
@@ -179,7 +179,7 @@ std::vector<std::vector<float>> EgammaDNNHelper::evaluate(const std::vector<std:
   }
   // Now we have just to re-order the outputs
   std::sort(outputs.begin(), outputs.end());
-  std::vector<std::vector<float>> final_outputs(outputs.size());
+  std::vector<std::vector<double>> final_outputs(outputs.size());
   std::transform(outputs.begin(), outputs.end(), final_outputs.begin(), [](auto a) { return a.second; });
 
   return final_outputs;

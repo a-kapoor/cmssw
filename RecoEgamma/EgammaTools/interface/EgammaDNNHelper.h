@@ -36,7 +36,7 @@ namespace egammaTools {
 
   // Model for function to be used on the specific candidate to get the model
   // index to be used for the evaluation.
-  typedef std::function<uint(const std::map<std::string, float>&)> ModelSelector;
+  typedef std::function<uint(const std::map<std::string, double>&)> ModelSelector;
 
   class EgammaDNNHelper {
   public:
@@ -47,10 +47,10 @@ namespace egammaTools {
     // together with the model index it has to be used.
     // The model index is determined by the ModelSelector functor passed in the constructor
     // which has access to all the variables.
-    std::pair<uint, std::vector<float>> getScaledInputs(const std::map<std::string, float>& variables) const;
+    std::pair<uint, std::vector<double>> getScaledInputs(const std::map<std::string, double>& variables) const;
 
-    std::vector<std::vector<float>> evaluate(const std::vector<std::map<std::string, float>>& candidates,
-                                             const std::vector<tensorflow::Session*>& sessions) const;
+    std::vector<std::vector<double>> evaluate(const std::vector<std::map<std::string, double>>& candidates,
+                                              const std::vector<tensorflow::Session*>& sessions) const;
 
   private:
     void initTensorFlowGraphs();

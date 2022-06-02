@@ -9,8 +9,11 @@
 
 using namespace std::placeholders;
 
-inline uint electronModelSelector(
-    const std::map<std::string, double>& vars, double ptThr, double etaThr, double endcapBoundary, double extEtaBoundary) {
+inline uint electronModelSelector(const std::map<std::string, double>& vars,
+                                  double ptThr,
+                                  double etaThr,
+                                  double endcapBoundary,
+                                  double extEtaBoundary) {
   /* 
   Selection of the model to be applied on the electron based on pt/eta cuts or whatever selection
   */
