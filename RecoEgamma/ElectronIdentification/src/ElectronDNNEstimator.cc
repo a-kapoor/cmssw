@@ -15,7 +15,7 @@ inline uint electronModelSelector(
   Selection of the model to be applied on the electron based on pt/eta cuts or whatever selection
   */
   const auto pt = vars.at("pt");
-  const auto absEta = std::abs(vars.at("eta"));
+  double absEta = std::abs(vars.at("eta"));
   if (absEta <= endcapBoundary) {
     if (pt < ptThr)
       return 0;

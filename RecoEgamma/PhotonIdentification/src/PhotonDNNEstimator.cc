@@ -12,7 +12,7 @@ inline uint photonModelSelector(const std::map<std::string, float>& vars, float 
   /* 
   Selection of the model to be applied on the photon based on eta limit
   */
-  const auto absEta = std::abs(vars.at("eta"));
+  double absEta = std::abs(vars.at("eta"));
   if (absEta <= etaThr) {
     return 0;
   } else {
