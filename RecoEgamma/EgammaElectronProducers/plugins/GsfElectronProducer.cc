@@ -60,7 +60,7 @@ namespace {
         // get the previous values
         auto& mvaOutput = mva_outputs[jele];
 
-        if (abs(el.superCluster()->eta()) <= extetaboundary) {
+        if (std::abs(el.superCluster()->eta()) <= extetaboundary) {
           mvaOutput.dnn_e_sigIsolated = values[0];
           mvaOutput.dnn_e_sigNonIsolated = values[1];
           mvaOutput.dnn_e_bkgNonIsolated = values[2];

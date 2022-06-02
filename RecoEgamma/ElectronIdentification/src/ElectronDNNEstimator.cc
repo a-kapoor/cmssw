@@ -10,7 +10,7 @@
 using namespace std::placeholders;
 
 inline uint electronModelSelector(
-    const std::map<std::string, float>& vars, float ptThr, float etaThr, float endcapBoundary, float extEtaBoundary) {
+    const std::map<std::string, double>& vars, double ptThr, double etaThr, double endcapBoundary, double extEtaBoundary) {
   /* 
   Selection of the model to be applied on the electron based on pt/eta cuts or whatever selection
   */
@@ -97,9 +97,9 @@ const std::vector<std::string> ElectronDNNEstimator::dnnAvaibleInputs = {
      "full5x5_e5x5_ratio_superCluster.rawEnergy",
      "full5x5_e5x5_ratio_superCluster.energy"}};
 
-std::map<std::string, float> ElectronDNNEstimator::getInputsVars(const reco::GsfElectron& ele) const {
+std::map<std::string, double> ElectronDNNEstimator::getInputsVars(const reco::GsfElectron& ele) const {
   // Prepare a map with all the defined variables
-  std::map<std::string, float> variables;
+  std::map<std::string, double> variables;
   variables["pt"] = ele.pt();
   variables["eta"] = ele.eta();
   variables["fbrem"] = ele.fbrem();
@@ -156,11 +156,11 @@ std::map<std::string, float> ElectronDNNEstimator::getInputsVars(const reco::Gsf
   return variables;
 }
 
-std::vector<std::vector<float>> ElectronDNNEstimator::evaluate(
+std::vector<std::vector<double>> ElectronDNNEstimator::evaluate(
     const reco::GsfElectronCollection& electrons, const std::vector<tensorflow::Session*>& sessions) const {
   // Collect the map of variables for each candidate and call the dnnHelper
   // Scaling, model selection and running is performed in the helper
-  std::vector<std::map<std::string, float>> inputs;
+  std::vector<std::map<std::string, double>> inputs;
   for (const auto& ele : electrons) {
     inputs.push_back(getInputsVars(ele));
   }
