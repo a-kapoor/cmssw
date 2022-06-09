@@ -61,12 +61,24 @@ namespace {
         auto& mvaOutput = mva_outputs[jele];
 
         if (abs(el.superCluster()->eta()) <= extetaboundary) {
+	  std::cout << "----------------------------------"<< std::endl;
+	  std::cout << "Length of values array (expected 5) = " << (sizeof(values)/sizeof(values[0])) << std::endl;
+	  std::cout << "values[0] = "<<values[0]<< std::endl;
+	  std::cout << "values[1] = "<<values[1]<< std::endl;
+	  std::cout << "values[2] = "<<values[2]<< std::endl;
+	  std::cout << "values[3] = "<<values[3]<< std::endl;
+	  std::cout << "values[4] = "<<values[4]<< std::endl;
+	  std::cout << "values[5] = "<<values[5]<< std::endl;
+	  std::cout << "values[6] = "<<values[6]<< std::endl;
+	  std::cout << "----------------------------------"<< std::endl;
+	    //std::cout << "Length of values array (expected 5) = " << (sizeof(values)/sizeof(*values)) << std::endl;
           mvaOutput.dnn_e_sigIsolated = values[0];
           mvaOutput.dnn_e_sigNonIsolated = values[1];
           mvaOutput.dnn_e_bkgNonIsolated = values[2];
           mvaOutput.dnn_e_bkgTau = values[3];
           mvaOutput.dnn_e_bkgPhoton = values[4];
         } else {
+	  std::cout << "Length of values array (expected 3) = " << (sizeof(values)/sizeof(values[0])) << std::endl;
           mvaOutput.dnn_e_sigIsolated = values[0];
           mvaOutput.dnn_e_sigNonIsolated = 0.0;
           mvaOutput.dnn_e_bkgNonIsolated = values[1];
